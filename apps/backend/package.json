@@ -10,7 +10,7 @@
     "start": "node dist/main.js",
     "build": "nest build",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint src prisma test",
+    "lint": "oxlint -c ../../.oxlintrc.json src prisma scripts",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",

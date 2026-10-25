@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "pnpm -r --parallel dev",
     "build": "pnpm -r build",
-    "lint": "eslint apps",
+    "lint": "oxlint && eslint \"apps/**/*.vue\"",
+    "lint:fix": "oxlint --fix && eslint --fix \"apps/**/*.vue\"",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
     "test:e2e": "pnpm --filter backend test:e2e",
@@ -15,12 +16,11 @@
   },
   "devDependencies": {},
   "dependencies": {
-    "@eslint/js": "^10.0.1",
+    "@typescript-eslint/parser": "^8.72.0",
     "eslint": "^10.13.0",
     "eslint-plugin-vue": "^10.11.1",
-    "globals": "^17.13.0",
-    "typescript": "^7.0.2",
-    "typescript-eslint": "^8.72.0",
+    "oxlint": "^1.89.0",
+    "typescript": "~6.0.3",
     "vue-eslint-parser": "^10.4.1"
   }
 }

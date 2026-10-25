@@ -118,8 +118,9 @@ It uses a fixed Faker seed and `upsert`, so it is deterministic and safe to run 
 # smoke test every API endpoint against a running server (needs `pnpm run dev` + seeded DB)
 pnpm --filter backend test:endpoints
 
-# static checks
+# static checks: oxlint for TS/JS and <script> blocks, ESLint (eslint-plugin-vue) for Vue templates
 pnpm lint
+pnpm lint:fix
 pnpm typecheck
 
 # unit tests (Jest in backend)

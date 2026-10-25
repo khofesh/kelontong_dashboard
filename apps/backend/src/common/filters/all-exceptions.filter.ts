@@ -133,8 +133,9 @@ export class AllExceptionsFilter implements ExceptionFilter {
   } {
     switch (error.code) {
       case "P2002": {
-        const target = Array.isArray(error.meta?.target)
-          ? (error.meta?.target as string[]).join(", ")
+        const fields = error.meta?.target;
+        const target = Array.isArray(fields)
+          ? (fields as string[]).join(", ")
           : "unique field";
         return {
           status: HttpStatus.CONFLICT,
