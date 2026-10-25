@@ -1,12 +1,14 @@
 import type { HttpClient } from "~/utils/api-client";
 import { createHttp } from "~/utils/api-client";
 
+const GUEST_PATHS = ["/login", "/register"];
+
 export function createApiClient(baseUrl: string): HttpClient {
   return createHttp($fetch as never, baseUrl, {
     onAuthFailure: () => {
       if (
         import.meta.client &&
-        !window.location.pathname.startsWith("/login")
+        !GUEST_PATHS.includes(window.location.pathname)
       ) {
         const current = `${window.location.pathname}${window.location.search}`;
         window.location.assign(
