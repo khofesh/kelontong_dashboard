@@ -14,19 +14,6 @@
     "db:seed": "pnpm --filter backend db:seed"
   },
   "devDependencies": {},
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "@nestjs/core",
-      "@parcel/watcher",
-      "@prisma/client",
-      "@prisma/engines",
-      "argon2",
-      "esbuild",
-      "prisma",
-      "unrs-resolver",
-      "vue-demi"
-    ]
-  },
   "dependencies": {
     "@eslint/js": "^10.0.1",
     "eslint": "^10.13.0",
