@@ -1,8 +1,18 @@
 import { faker } from "@faker-js/faker";
+import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient, Role } from "@prisma/client";
 import * as argon2 from "argon2";
+import { config } from "dotenv";
+import path from "node:path";
 
-const prisma = new PrismaClient();
+config({ path: path.resolve(__dirname, "../../../.env") });
+
+const databaseUrl = process.env.DATABASE_URL;
+if (!databaseUrl) throw new Error("DATABASE_URL is not set");
+
+const prisma = new PrismaClient({
+  adapter: new PrismaPg({ connectionString: databaseUrl }),
+});
 
 faker.seed(20261023);
 
