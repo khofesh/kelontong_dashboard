@@ -62,9 +62,7 @@ function go(page: number): void {
         ‹
       </button>
       <template v-for="(item, index) in pages" :key="`${item}-${index}`">
-        <span v-if="item === '…'" class="btn btn--sm" aria-hidden="true"
-          >…</span
-        >
+        <span v-if="item === '…'" class="btn btn--sm" aria-hidden="true">…</span>
         <button
           v-else
           type="button"

@@ -83,9 +83,11 @@ function indicator(field: SortField): string {
               :size="40"
             />
             <div>
-              <NuxtLink :to="`/products/${product.id}`">{{
-                product.name
-              }}</NuxtLink>
+              <NuxtLink :to="`/products/${product.id}`">
+                {{
+                  product.name
+                }}
+              </NuxtLink>
               <div class="muted mono">{{ product.sku }}</div>
             </div>
           </div>

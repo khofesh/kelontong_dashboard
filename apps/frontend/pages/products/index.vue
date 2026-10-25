@@ -181,9 +181,9 @@ async function restore(product: Product): Promise<void> {
         <p class="muted" style="margin: 0">Kelola katalog produk toko.</p>
       </div>
       <div class="page-header__actions">
-        <NuxtLink to="/products/new" class="btn btn--primary"
-          >+ Tambah produk</NuxtLink
-        >
+        <NuxtLink to="/products/new" class="btn btn--primary">
+          + Tambah produk
+        </NuxtLink>
       </div>
     </div>
 
@@ -255,9 +255,7 @@ async function restore(product: Product): Promise<void> {
         {{ store.totalItems }} produk
         <template v-if="filtered">sesuai filter</template>
       </span>
-      <span v-if="store.loading" class="muted"
-        ><span class="spinner" /> Memuat…</span
-      >
+      <span v-if="store.loading" class="muted"><span class="spinner" /> Memuat…</span>
       <button
         v-else-if="filtered"
         type="button"

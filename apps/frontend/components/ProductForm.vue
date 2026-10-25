@@ -82,9 +82,7 @@ function submit(): void {
             placeholder="MIE-GRG-001"
           />
           <span v-if="errors.sku" class="field-error">{{ errors.sku }}</span>
-          <span v-else class="field-hint"
-            >Huruf, angka, dan tanda hubung. Harus unik.</span
-          >
+          <span v-else class="field-hint">Huruf, angka, dan tanda hubung. Harus unik.</span>
         </div>
 
         <div class="field">
@@ -129,9 +127,7 @@ function submit(): void {
         </div>
 
         <div class="field span-2">
-          <label for="description"
-            >Deskripsi <span class="muted">(opsional)</span></label
-          >
+          <label for="description">Deskripsi <span class="muted">(opsional)</span></label>
           <textarea
             id="description"
             v-model="form.description"
@@ -257,9 +253,7 @@ function submit(): void {
           :size="64"
         />
         <div class="field" style="flex: 1">
-          <label for="imageUrl"
-            >URL gambar <span class="muted">(opsional)</span></label
-          >
+          <label for="imageUrl">URL gambar <span class="muted">(opsional)</span></label>
           <input
             id="imageUrl"
             v-model="form.imageUrl"

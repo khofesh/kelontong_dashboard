@@ -94,9 +94,7 @@ async function submit(): Promise<void> {
           <span v-if="errors.password" class="field-error">{{
             errors.password
           }}</span>
-          <span v-else class="field-hint"
-            >Minimal 8 karakter, berisi huruf dan angka.</span
-          >
+          <span v-else class="field-hint">Minimal 8 karakter, berisi huruf dan angka.</span>
         </div>
 
         <div class="field">

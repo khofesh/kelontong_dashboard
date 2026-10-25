@@ -68,9 +68,9 @@ function restore(): Promise<void> {
 
 <template>
   <main class="container">
-    <NuxtLink to="/products" class="back-link"
-      >← Kembali ke daftar produk</NuxtLink
-    >
+    <NuxtLink to="/products" class="back-link">
+      ← Kembali ke daftar produk
+    </NuxtLink>
 
     <div v-if="loading" class="card detail" aria-busy="true">
       <span class="skeleton" style="height: 240px" />

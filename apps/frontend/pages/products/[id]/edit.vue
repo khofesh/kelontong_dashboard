@@ -39,9 +39,9 @@ async function save(values: ProductInput): Promise<void> {
 
 <template>
   <main class="container" style="max-width: 860px">
-    <NuxtLink :to="`/products/${id}`" class="back-link"
-      >← Kembali ke detail produk</NuxtLink
-    >
+    <NuxtLink :to="`/products/${id}`" class="back-link">
+      ← Kembali ke detail produk
+    </NuxtLink>
 
     <div v-if="loading" class="card" aria-busy="true">
       <span class="skeleton" style="width: 40%; margin-bottom: 1rem" />

@@ -33,9 +33,9 @@ async function create(values: ProductInput): Promise<void> {
 
 <template>
   <main class="container" style="max-width: 860px">
-    <NuxtLink to="/products" class="back-link"
-      >← Kembali ke daftar produk</NuxtLink
-    >
+    <NuxtLink to="/products" class="back-link">
+      ← Kembali ke daftar produk
+    </NuxtLink>
     <div class="page-header">
       <h1>Tambah produk</h1>
     </div>
