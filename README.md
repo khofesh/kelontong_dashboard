@@ -1,5 +1,7 @@
 # kelontong dashboard
 
+## dev on local
+
 run db
 
 ```shell
@@ -12,4 +14,22 @@ migrate db
 
 ```shell
 pnpm --filter backend db:migrate:dev --name init
+```
+
+run dev (backend and frontend)
+
+```shell
+pnpm run dev
+```
+
+adding a package to backend
+
+```shell
+pnpm --filter backend add express@^5.2.1
+```
+
+smoke test all endpoints
+
+```shell
+pnpm --filter backend test:endpoints
 ```
