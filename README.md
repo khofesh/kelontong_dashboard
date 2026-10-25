@@ -38,6 +38,8 @@ pnpm run dev
 
 Open http://localhost:3000 and log in with one of the [test accounts](#test-accounts). The frontend proxies `/api/**` to the backend, so the API is also reachable at http://localhost:3001/api/v1 (e.g. `GET /api/v1/health`).
 
+swagger UI: http://localhost:3001/api/docs
+
 Useful database commands:
 
 ```shell
@@ -55,24 +57,24 @@ pnpm --filter backend add express@^5.2.1
 
 All variables live in a single `.env` at the repository root (`.env.example` is the template). The backend validates them with Zod at startup (`apps/backend/src/config/env.validation.ts`) and refuses to start if something is missing or invalid.
 
-| Variable                | Used by          | Default / example                                                        | Description                                                                         |
-| ----------------------- | ---------------- | ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------- |
-| `POSTGRES_USER`         | docker compose   | `kelontong`                                                              | Database user created by the Postgres container                                     |
-| `POSTGRES_PASSWORD`     | docker compose   | `kelontong`                                                              | Database password                                                                   |
-| `POSTGRES_DB`           | docker compose   | `kelontong`                                                              | Database name                                                                       |
-| `POSTGRES_PORT`         | docker compose   | `5432`                                                                   | Host port mapped to Postgres                                                        |
-| `DATABASE_URL`          | backend, Prisma  | `postgresql://kelontong:kelontong@localhost:5432/kelontong?schema=public` | **Required.** Connection string for the app, migrations and seeder                  |
-| `PORT`                  | backend          | `3001`                                                                   | HTTP port of the API                                                                |
-| `NODE_ENV`              | backend          | `development`                                                            | `development` \| `test` \| `production`. `development` enables pretty logs           |
-| `JWT_ACCESS_SECRET`     | backend          | —                                                                        | **Required**, min. 16 characters. Signs access tokens                               |
-| `JWT_ACCESS_TTL`        | backend          | `15m`                                                                    | Access token lifetime (`ms`, `s`, `m`, `h`, `d`)                                    |
-| `JWT_REFRESH_SECRET`    | backend          | —                                                                        | **Required**, min. 16 characters, different from the access secret                 |
-| `JWT_REFRESH_TTL`       | backend          | `7d`                                                                     | Refresh token lifetime                                                              |
-| `COOKIE_SECURE`         | backend          | `false`                                                                  | Set to `true` when served over HTTPS                                                |
-| `FRONTEND_ORIGIN`       | backend          | `http://localhost:3000`                                                  | Allowed CORS origin(s), comma-separated                                             |
-| `NUXT_PUBLIC_API_BASE`  | frontend         | `/api/v1`                                                                | Base path the browser uses to call the API                                          |
-| `NUXT_API_PROXY_TARGET` | frontend         | `http://localhost:3001`                                                  | Where Nuxt proxies `/api/**` to                                                     |
-| `API_URL`               | `test:endpoints` | `http://localhost:3001/api/v1`                                           | Optional. Target of the smoke test script (also `ADMIN_EMAIL`, `ADMIN_PASSWORD`)    |
+| Variable                | Used by          | Default / example                                                         | Description                                                                      |
+| ----------------------- | ---------------- | ------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `POSTGRES_USER`         | docker compose   | `kelontong`                                                               | Database user created by the Postgres container                                  |
+| `POSTGRES_PASSWORD`     | docker compose   | `kelontong`                                                               | Database password                                                                |
+| `POSTGRES_DB`           | docker compose   | `kelontong`                                                               | Database name                                                                    |
+| `POSTGRES_PORT`         | docker compose   | `5432`                                                                    | Host port mapped to Postgres                                                     |
+| `DATABASE_URL`          | backend, Prisma  | `postgresql://kelontong:kelontong@localhost:5432/kelontong?schema=public` | **Required.** Connection string for the app, migrations and seeder               |
+| `PORT`                  | backend          | `3001`                                                                    | HTTP port of the API                                                             |
+| `NODE_ENV`              | backend          | `development`                                                             | `development` \| `test` \| `production`. `development` enables pretty logs       |
+| `JWT_ACCESS_SECRET`     | backend          | —                                                                         | **Required**, min. 16 characters. Signs access tokens                            |
+| `JWT_ACCESS_TTL`        | backend          | `15m`                                                                     | Access token lifetime (`ms`, `s`, `m`, `h`, `d`)                                 |
+| `JWT_REFRESH_SECRET`    | backend          | —                                                                         | **Required**, min. 16 characters, different from the access secret               |
+| `JWT_REFRESH_TTL`       | backend          | `7d`                                                                      | Refresh token lifetime                                                           |
+| `COOKIE_SECURE`         | backend          | `false`                                                                   | Set to `true` when served over HTTPS                                             |
+| `FRONTEND_ORIGIN`       | backend          | `http://localhost:3000`                                                   | Allowed CORS origin(s), comma-separated                                          |
+| `NUXT_PUBLIC_API_BASE`  | frontend         | `/api/v1`                                                                 | Base path the browser uses to call the API                                       |
+| `NUXT_API_PROXY_TARGET` | frontend         | `http://localhost:3001`                                                   | Where Nuxt proxies `/api/**` to                                                  |
+| `API_URL`               | `test:endpoints` | `http://localhost:3001/api/v1`                                            | Optional. Target of the smoke test script (also `ADMIN_EMAIL`, `ADMIN_PASSWORD`) |
 
 Generate secrets with, for example:
 
@@ -135,10 +137,10 @@ The `test:endpoints` script logs in as the seeded admin, registers fresh users, 
 
 Created by the seeder:
 
-| Role  | Email                  | Password     | Can do                                                    |
-| ----- | ---------------------- | ------------ | --------------------------------------------------------- |
+| Role  | Email                  | Password     | Can do                                                              |
+| ----- | ---------------------- | ------------ | ------------------------------------------------------------------- |
 | ADMIN | `admin@kelontong.test` | `Admin12345` | Everything, including archive/restore and viewing archived products |
-| STAFF | `staff@kelontong.test` | `Staff12345` | List, view, create and edit active products               |
+| STAFF | `staff@kelontong.test` | `Staff12345` | List, view, create and edit active products                         |
 
 New accounts made through the register page are always STAFF.
 
