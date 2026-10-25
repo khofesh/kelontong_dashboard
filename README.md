@@ -1,38 +1,196 @@
-# kelontong dashboard
+# Kelontong Dashboard
 
-## dev on local
+A product management dashboard for a small grocery store (_toko kelontong_). Staff can browse, search, filter, create and edit products; admins can also archive and restore them.
 
-run db
+- **Backend:** NestJS 11 + Prisma 7 + PostgreSQL 16 (`apps/backend`, port `3001`)
+- **Frontend:** Nuxt 3 in SPA mode + Pinia + Zod (`apps/frontend`, port `3000`)
+- **Monorepo:** pnpm workspaces
+
+## Setup
+
+### Prerequisites
+
+- Node.js 24
+- pnpm 12 (`corepack enable` picks up the version from `packageManager` in `package.json`)
+- Docker + Docker Compose (for PostgreSQL)
+
+### Steps
 
 ```shell
+# 1. install dependencies for every workspace
+pnpm install
+
+# 2. create the env file and fill in the JWT secrets
+cp .env.example .env
+
+# 3. start PostgreSQL and wait until it is healthy
 docker compose up -d --wait db
+
+# 4. apply the database schema
+pnpm --filter backend db:migrate:dev
+
+# 5. seed users, categories and 100 products
+pnpm db:seed
+
+# 6. run backend and frontend together
+pnpm run dev
+```
+
+Open http://localhost:3000 and log in with one of the [test accounts](#test-accounts). The frontend proxies `/api/**` to the backend, so the API is also reachable at http://localhost:3001/api/v1 (e.g. `GET /api/v1/health`).
+
+Useful database commands:
+
+```shell
 docker compose ps
 docker compose logs --tail 20 db
 ```
 
-migrate db
-
-```shell
-pnpm --filter backend db:migrate:dev --name init
-```
-
-run dev (backend and frontend)
-
-```shell
-pnpm run dev
-```
-
-adding a package to backend
+Adding a package to one workspace:
 
 ```shell
 pnpm --filter backend add express@^5.2.1
 ```
 
-smoke test all endpoints
+## Environment variables
+
+All variables live in a single `.env` at the repository root (`.env.example` is the template). The backend validates them with Zod at startup (`apps/backend/src/config/env.validation.ts`) and refuses to start if something is missing or invalid.
+
+| Variable                | Used by          | Default / example                                                        | Description                                                                         |
+| ----------------------- | ---------------- | ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------- |
+| `POSTGRES_USER`         | docker compose   | `kelontong`                                                              | Database user created by the Postgres container                                     |
+| `POSTGRES_PASSWORD`     | docker compose   | `kelontong`                                                              | Database password                                                                   |
+| `POSTGRES_DB`           | docker compose   | `kelontong`                                                              | Database name                                                                       |
+| `POSTGRES_PORT`         | docker compose   | `5432`                                                                   | Host port mapped to Postgres                                                        |
+| `DATABASE_URL`          | backend, Prisma  | `postgresql://kelontong:kelontong@localhost:5432/kelontong?schema=public` | **Required.** Connection string for the app, migrations and seeder                  |
+| `PORT`                  | backend          | `3001`                                                                   | HTTP port of the API                                                                |
+| `NODE_ENV`              | backend          | `development`                                                            | `development` \| `test` \| `production`. `development` enables pretty logs           |
+| `JWT_ACCESS_SECRET`     | backend          | —                                                                        | **Required**, min. 16 characters. Signs access tokens                               |
+| `JWT_ACCESS_TTL`        | backend          | `15m`                                                                    | Access token lifetime (`ms`, `s`, `m`, `h`, `d`)                                    |
+| `JWT_REFRESH_SECRET`    | backend          | —                                                                        | **Required**, min. 16 characters, different from the access secret                 |
+| `JWT_REFRESH_TTL`       | backend          | `7d`                                                                     | Refresh token lifetime                                                              |
+| `COOKIE_SECURE`         | backend          | `false`                                                                  | Set to `true` when served over HTTPS                                                |
+| `FRONTEND_ORIGIN`       | backend          | `http://localhost:3000`                                                  | Allowed CORS origin(s), comma-separated                                             |
+| `NUXT_PUBLIC_API_BASE`  | frontend         | `/api/v1`                                                                | Base path the browser uses to call the API                                          |
+| `NUXT_API_PROXY_TARGET` | frontend         | `http://localhost:3001`                                                  | Where Nuxt proxies `/api/**` to                                                     |
+| `API_URL`               | `test:endpoints` | `http://localhost:3001/api/v1`                                           | Optional. Target of the smoke test script (also `ADMIN_EMAIL`, `ADMIN_PASSWORD`)    |
+
+Generate secrets with, for example:
 
 ```shell
-pnpm --filter backend test:endpoints
+openssl rand -base64 48
 ```
+
+## Database migration / schema setup
+
+The schema is defined in `apps/backend/prisma/schema.prisma`, and migrations are in `apps/backend/prisma/migrations`.
+
+```shell
+# development: apply pending migrations, and create a new one if the schema changed
+pnpm --filter backend db:migrate:dev
+pnpm --filter backend db:migrate:dev --name add_something   # name a new migration
+
+# CI / production: apply existing migrations only, never generates new ones
+pnpm db:migrate
+
+# regenerate the Prisma client after editing schema.prisma
+pnpm --filter backend prisma:generate
+```
+
+On first start, the Postgres container also creates an empty `kelontong_test` database (`docker/postgres/init.sh`) for running tests in isolation.
+
+## Seeder
+
+```shell
+pnpm db:seed
+```
+
+The seeder (`apps/backend/prisma/seed.ts`) creates:
+
+- 2 users (one ADMIN, one STAFF), see [test accounts](#test-accounts)
+- 8 categories (Snacks, Minuman, Sembako, Bumbu Dapur, ...)
+- 100 products with a mix of states: about 10% inactive, 5% archived, and some without an image
+
+It uses a fixed Faker seed and `upsert`, so it is deterministic and safe to run more than once. Running it again resets the two test users' passwords and does not duplicate products.
+
+## Running tests
+
+```shell
+# smoke test every API endpoint against a running server (needs `pnpm run dev` + seeded DB)
+pnpm --filter backend test:endpoints
+
+# static checks
+pnpm lint
+pnpm typecheck
+
+# unit tests (Jest in backend)
+pnpm test
+```
+
+The `test:endpoints` script logs in as the seeded admin, registers fresh users, and runs through auth, categories, product CRUD, archive/restore, and role checks. Register and login are limited to 5 requests per minute per IP, so wait a minute between runs.
+
+> Automated unit and e2e test suites have not been written yet. Jest and Vitest are installed, but there are no spec files, so `pnpm test` currently exits with "No tests found", and `test:e2e` has no config. For now, `test:endpoints` is the way to verify the API. See [Testing gaps](#testing-gaps).
+
+## Test accounts
+
+Created by the seeder:
+
+| Role  | Email                  | Password     | Can do                                                    |
+| ----- | ---------------------- | ------------ | --------------------------------------------------------- |
+| ADMIN | `admin@kelontong.test` | `Admin12345` | Everything, including archive/restore and viewing archived products |
+| STAFF | `staff@kelontong.test` | `Staff12345` | List, view, create and edit active products               |
+
+New accounts made through the register page are always STAFF.
+
+## Project structure
+
+```
+.
+├── apps/
+│   ├── backend/                 NestJS API
+│   │   ├── prisma/              schema.prisma, migrations/, seed.ts
+│   │   ├── scripts/             test-endpoints.ts (API smoke test)
+│   │   ├── src/
+│   │   │   ├── main.ts          bootstrap
+│   │   │   ├── app.setup.ts     helmet, cookies, CORS, /api/v1 prefix, ValidationPipe
+│   │   │   ├── app.module.ts    config, logger, throttler, global guards/filter/interceptor
+│   │   │   ├── config/          env validation (Zod)
+│   │   │   ├── prisma/          PrismaService
+│   │   │   ├── auth/            login, register, refresh, logout, JWT strategy
+│   │   │   ├── users/           UsersService + mapper (never exposes passwordHash)
+│   │   │   ├── categories/      list categories
+│   │   │   ├── products/        controller -> service -> Prisma, DTOs, response mapper
+│   │   │   ├── health/          /health (app + DB check)
+│   │   │   └── common/          guards, decorators, exception filter, response envelope, pagination
+│   │   └── Dockerfile
+│   └── frontend/                Nuxt 3 SPA
+│       ├── pages/               login, register, products (list, new, [id] detail, [id]/edit)
+│       ├── components/          ProductTable, ProductCardList, ProductForm, EmptyState, ErrorState, ...
+│       ├── layouts/             app shell (header, user menu, flash messages)
+│       ├── middleware/          auth.global.ts (protects every page except login/register)
+│       ├── stores/              Pinia: auth, productList
+│       ├── composables/         useApi, useProduct, useCategories, useFlash
+│       ├── services/            one function per API endpoint
+│       ├── utils/               api-client (fetch + token refresh), URL <-> query, formatters
+│       └── types/               API types and Zod schemas
+├── docker/postgres/init.sh      creates the test database
+├── docker-compose.yml           PostgreSQL for local development
+├── docs/ARCHITECTURE.md         detailed architecture notes
+└── .env.example
+```
+
+## Key architecture decisions
+
+More detail in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
+- **PostgreSQL instead of a document store.** The data is relational. The database enforces unique SKU and email, and the product → category foreign key (`onDelete: Restrict`) prevents deleting a category that is still in use. Prices are stored as integer Rupiah to avoid floating point errors.
+- **Modular NestJS backend, one module per domain.** Controllers are thin (read input, call the service), business rules live in services, and explicit mappers decide what goes into a response, so internal fields like `passwordHash`, `deletedAt` or `createdById` never leak.
+- **Secure by default.** `JwtAuthGuard` and `RolesGuard` are global: every route needs a login unless marked `@Public()`, and admin-only routes use `@Roles(Role.ADMIN)`. Input is validated with `class-validator` DTOs (`whitelist` + `forbidNonWhitelisted`).
+- **Cookie-based auth with refresh token rotation.** Access (15 min) and refresh (7 days) JWTs are stored in `httpOnly` cookies, so JavaScript cannot read them. The refresh cookie is scoped to `/api/v1/auth`, and only an argon2 hash of the refresh token is stored. Passwords are hashed with argon2, and login takes the same time whether the email exists or not.
+- **Consistent API contract.** Everything is under `/api/v1`. Success responses are `{ data }` or `{ data, meta }` (pagination), and errors are `{ error: { code, message, details, requestId } }` from a single exception filter.
+- **Soft delete.** Archiving sets `deletedAt` instead of deleting the row, so products can be restored and history stays intact. Only admins see or restore archived products.
+- **Frontend SPA behind a same-origin proxy.** Nuxt runs with `ssr: false`, which is enough for an internal dashboard. Nuxt proxies `/api/**` to the backend, so cookies stay first-party and no CORS setup is needed in the browser. Data flows one way: page → store/composable → service → api-client. Components never call HTTP directly, and list filters are kept in the URL so they survive reloads and can be shared.
+- **Basic observability built in.** `nestjs-pino` writes structured logs with an `X-Request-Id` per request and redacts cookies and authorization headers.
+- **Deliberate trade-offs for the time box.** Offset pagination, `ILIKE` search, two hard-coded roles, and no image upload. These are fine for ~100 products. How to scale past that is described in `docs/ARCHITECTURE.md` and under [Production Gaps](#production-gaps) below.
 
 ## Production Gaps
 
