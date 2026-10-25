@@ -1,0 +1,63 @@
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+enum Role {
+    ADMIN
+    STAFF
+}
+
+model User {
+    id               String   @id @default(uuid())
+    email            String   @unique // stored lower-cased
+    name             String
+    passwordHash     String
+    role             Role     @default(STAFF)
+    refreshTokenHash String?
+    createdAt        DateTime @default(now())
+    updatedAt        DateTime @updatedAt
+
+    @@index([role])
+}
+
+model Category {
+    id        Int       @id @default(autoincrement())
+    name      String    @unique
+    slug      String    @unique
+    products  Product[]
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+}
+
+model Product {
+    id          Int       @id @default(autoincrement())
+    sku         String    @unique // upper-cased, trimmed
+    name        String
+    description String?
+    categoryId  Int
+    category    Category  @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+    weight      Int // grams
+    width       Int // centimetres
+    length      Int // centimetres
+    height      Int // centimetres
+    imageUrl    String?
+    price       Int // Rupiah, no decimals
+    stock       Int       @default(0)
+    isActive    Boolean   @default(true)
+    deletedAt   DateTime?
+    createdById String?
+    updatedById String?
+    createdAt   DateTime  @default(now())
+    updatedAt   DateTime  @updatedAt
+
+    @@index([categoryId])
+    @@index([isActive])
+    @@index([deletedAt])
+    @@index([createdAt])
+    @@index([price])
+}
