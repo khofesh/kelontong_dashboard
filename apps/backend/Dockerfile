@@ -6,7 +6,7 @@ ENV PATH=$PNPM_HOME:$PATH
 RUN apt-get update \
     && apt-get install -y --no-install-recommends openssl ca-certificates \
     && rm -rf /var/lib/apt/lists/*
-RUN corepack enable && corepack prepare pnpm@11.1.2 --activate
+RUN corepack enable && corepack prepare pnpm@12.15.0 --activate
 WORKDIR /app
 
 FROM base AS deps
