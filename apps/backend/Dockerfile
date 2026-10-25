@@ -17,7 +17,9 @@ RUN pnpm install --filter backend... --frozen-lockfile
 
 FROM deps AS dev
 COPY apps/backend apps/backend
-RUN pnpm --filter backend exec prisma generate
+# prisma.config.ts requires DATABASE_URL, but generate never connects to the db
+RUN DATABASE_URL=postgresql://build:build@localhost:5432/build \
+    pnpm --filter backend exec prisma generate
 EXPOSE 3001
 CMD ["pnpm", "--filter", "backend", "dev"]
 

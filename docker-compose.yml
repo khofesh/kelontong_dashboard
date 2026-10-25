@@ -1,3 +1,14 @@
+x-backend-env: &backend-env
+  DATABASE_URL: postgresql://${POSTGRES_USER:-kelontong}:${POSTGRES_PASSWORD:-kelontong}@db:5432/${POSTGRES_DB:-kelontong}?schema=public
+  PORT: 3001
+  NODE_ENV: ${NODE_ENV:-development}
+  JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-dev-access-secret-change-me-32chars}
+  JWT_ACCESS_TTL: ${JWT_ACCESS_TTL:-15m}
+  JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-dev-refresh-secret-change-me-32chars}
+  JWT_REFRESH_TTL: ${JWT_REFRESH_TTL:-7d}
+  COOKIE_SECURE: ${COOKIE_SECURE:-false}
+  FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://localhost:3000}
+
 services:
   db:
     image: postgres:16-alpine
@@ -20,6 +31,68 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+
+  backend:
+    build:
+      context: .
+      dockerfile: apps/backend/Dockerfile
+      target: dev
+    restart: unless-stopped
+    environment: *backend-env
+    command: >
+      sh -c "pnpm --filter backend exec prisma migrate deploy &&
+             pnpm --filter backend dev"
+    ports:
+      - "${BACKEND_PORT:-3001}:3001"
+    volumes:
+      - ./apps/backend/src:/app/apps/backend/src
+      - ./apps/backend/prisma:/app/apps/backend/prisma
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: .
+      dockerfile: apps/frontend/Dockerfile
+      target: dev
+    restart: unless-stopped
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      NUXT_PUBLIC_API_BASE: ${NUXT_PUBLIC_API_BASE:-/api/v1}
+      NUXT_API_PROXY_TARGET: http://backend:3001
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    volumes:
+      - ./apps/frontend/app.vue:/app/apps/frontend/app.vue
+      - ./apps/frontend/nuxt.config.ts:/app/apps/frontend/nuxt.config.ts
+      - ./apps/frontend/components:/app/apps/frontend/components
+      - ./apps/frontend/composables:/app/apps/frontend/composables
+      - ./apps/frontend/layouts:/app/apps/frontend/layouts
+      - ./apps/frontend/middleware:/app/apps/frontend/middleware
+      - ./apps/frontend/pages:/app/apps/frontend/pages
+      - ./apps/frontend/plugins:/app/apps/frontend/plugins
+      - ./apps/frontend/public:/app/apps/frontend/public
+      - ./apps/frontend/services:/app/apps/frontend/services
+      - ./apps/frontend/stores:/app/apps/frontend/stores
+      - ./apps/frontend/types:/app/apps/frontend/types
+      - ./apps/frontend/utils:/app/apps/frontend/utils
+    depends_on:
+      - backend
+
+  seed:
+    build:
+      context: .
+      dockerfile: apps/backend/Dockerfile
+      target: dev
+    profiles: ["tools"]
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-kelontong}:${POSTGRES_PASSWORD:-kelontong}@db:5432/${POSTGRES_DB:-kelontong}?schema=public
+      NODE_ENV: ${NODE_ENV:-development}
+    command: sh -c "pnpm --filter backend exec prisma migrate deploy && pnpm --filter backend db:seed"
+    depends_on:
+      db:
+        condition: service_healthy
 
 volumes:
   pgdata:
